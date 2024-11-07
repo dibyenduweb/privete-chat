@@ -1,23 +1,45 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect, Suspense } from "react";
+import JoinChat from "./components/JoinChat";
+
+const ChatRoom = React.lazy(() => import("./components/ChatRoom"));
 
 function App() {
+  const [username, setUsername] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check localStorage for the username on app load
+  useEffect(() => {
+    const savedUsername = localStorage.getItem("username");
+    if (savedUsername) {
+      setUsername(savedUsername);
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  // Handle login
+  const handleLogin = (name) => {
+    setUsername(name);
+    setIsLoggedIn(true);
+    localStorage.setItem("username", name); // Store username in localStorage
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    setUsername("");
+    setIsLoggedIn(false);
+    localStorage.removeItem("username"); // Remove username from localStorage
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      {isLoggedIn ? (
+        // Wrap lazy-loaded component in Suspense for fallback loading
+        <Suspense fallback={<div className="text-center text-white">Loading chat...</div>}>
+          <ChatRoom username={username} onLogout={handleLogout} />
+        </Suspense>
+      ) : (
+        <JoinChat onLogin={handleLogin} />
+      )}
     </div>
   );
 }
